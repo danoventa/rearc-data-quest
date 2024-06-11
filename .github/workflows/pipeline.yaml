@@ -3,11 +3,11 @@ name: Pipeline
 on:
   push:
     branches:
-      - 'main'
-      - 'feature**'
+      - 'master'
+      - 'feat**'
   delete:
     branches:
-      - 'feature**'
+      - 'feat**'
 
 env:
   PIPELINE_USER_ACCESS_KEY_ID: ${{ secrets.AWS_ACCESS_KEY_ID }}
