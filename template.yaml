@@ -1,0 +1,45 @@
+AWSTemplateFormatVersion: '2010-09-09'
+Transform: AWS::Serverless-2016-10-31
+Description: |
+  dan-rearc-dataquest
+  Sample SAM Template for dan-rearc-dataquest
+
+Resources:
+  FileSyncerFunction:
+    Type: AWS::Serverless::Function
+    Properties:
+      CodeUri: functions/file_syncer/
+      Handler: app.lambda_handler
+      Runtime: python3.12
+      MemorySize: 3008
+      Timeout: 30
+
+  SyncAndReportStateMachine:
+    Type: AWS::Serverless::StateMachine # More info about State Machine Resource: https://docs.aws.amazon.com/serverless-application-model/latest/developerguide/sam-resource-statemachine.html
+    Properties:
+      DefinitionSubstitutions:
+        FileSyncerFunctionArn: !GetAtt FileSyncerFunction.Arn
+      Events:
+        DailySyncSchedule:
+          Type: Schedule # More info about Schedule Event Source: https://docs.aws.amazon.com/serverless-application-model/latest/developerguide/sam-property-statemachine-schedule.html
+          Properties:
+            Description: Daily Schedule to sync data and report
+            Enabled: false # This schedule is disabled by default to avoid incurring charges.
+            Schedule: rate(1 day)
+      Policies:
+        # Find out more about SAM policy templates: https://docs.aws.amazon.com/serverless-application-model/latest/developerguide/serverless-policy-templates.html
+        - LambdaInvokePolicy:
+            FunctionName: !Ref FileSyncerFunction
+      Type: STANDARD
+      DefinitionUri: statemachine/rearc_data_quest.asl.json
+
+Outputs:
+  # SyncAndReportStateMachine is an implicit Schedule event rule created out of Events key under Serverless::StateMachine
+  # Find out more about other implicit resources you can reference within SAM
+  # https://docs.aws.amazon.com/serverless-application-model/latest/developerguide/sam-specification-generated-resources.html
+  SyncAndReportStateMachineArn:
+    Description: Data Sync and Reporting State Machine ARN
+    Value: !Ref SyncAndReportStateMachine
+  SyncAndReportStateMachineRoleArn:
+    Description: IAM Role created for the sync and reporting state machine.
+    Value: !GetAtt SyncAndReportStateMachineRole.Arn
