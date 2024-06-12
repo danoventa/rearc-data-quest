@@ -13,8 +13,7 @@ AWS Toolkit For Visual Studio Code supports local debugging for serverless appli
 * dan-rearc-dataquest:SyncAndReportStateMachine
 * dan-rearc-dataquest:FileSyncerFunction (python3.12)
 * dan-rearc-dataquest:DataSyncerFunction (python3.12)
-* dan-rearc-dataquest:StockBuyerFunction (python3.12)
-* dan-rearc-dataquest:TransactionTable
+* dan-rearc-dataquest:ReporterFunction (python3.12)
 
 You can debug the Lambda handlers locally by adding a breakpoint to the source file, then running the launch configuration. This works by using Docker on your local machine.
 
