@@ -8,6 +8,9 @@ from bs4 import BeautifulSoup
 from botocore.client import Config
 from urllib.request import urlopen
 
+logger = logging.getLogger()
+
+logger.setLevel("INFO")
 
 class FileSyncer:
     def __init__(self, host_url: str, s3_bucket: str) -> None:
@@ -44,7 +47,7 @@ class FileSyncer:
 
 
     def _check_files_to_update(self) -> None:
-        logging.log(logging.INFO, f"Checking files to be updated...")
+        logger.info(f"Checking files to be updated...")
 
         s3_files = set()
         for obj in self.bucket.objects.filter(Prefix="productivity_cost/"):
@@ -63,15 +66,15 @@ class FileSyncer:
                     self.files_up_to_date.remove((update_date, update_file))
                     self.files_to_delete.add((update_date, update_file))
 
-        logging.log(logging.INFO, f"Staging the following files to upload: {self.files_to_add}")
-        logging.log(logging.INFO, f"Staging the following files to delete: {self.files_to_delete}")
-        logging.log(logging.INFO, f"The following files are up to date: {self.files_up_to_date}")
+        logger.info(f"Staging the following files to upload: {self.files_to_add}")
+        logger.info(f"Staging the following files to delete: {self.files_to_delete}")
+        logger.info(f"The following files are up to date: {self.files_up_to_date}")
 
 
     def _create_date_directory(self, date: str) -> None:
         # Create tmp directory if it doesn't exist
         if not os.path.exists(f"/tmp/{date}"):
-            logging.log(logging.INFO, f"Creating directory for date: {date}")
+            logger.info(f"Creating directory for date: {date}")
             os.makedirs(f"/tmp/{date}")
 
 
@@ -82,12 +85,14 @@ class FileSyncer:
         presigned_urls = []
         for date, file in available_files:
             key = f"{self.prefix}/{date}/{file}"
-            logging.log(logging.INFO, f"Generating presigned URL for key: {key}")
+            logger.info(f"Generating presigned URL for key: {key}")
             presigned_urls.append((date, file, self.s3_client.generate_presigned_url('get_object',
                                             Params={'Bucket': self.s3_bucket,
                                                     'Key': f"{key}"},
                                             ExpiresIn=expires_in)))
 
+        logger.info(f"Generated {len(presigned_urls)} presigned URLs")
+        logger.info(f"Presigned URLs: {presigned_urls}")
         return presigned_urls            
 
     def send_email(self, email: str = "noventa@hey.com") -> None:
@@ -96,7 +101,7 @@ class FileSyncer:
             html_list += f'<li>{date}/{file}: {item}</li>'
         html_list += '</ol>'          
 
-        logging.log(logging.INFO, f"Sending email to {email}")
+        logger.info(f"Sending email to {email}")
         self.ses_client.send_email(
             Destination={
                 'ToAddresses': [email],
@@ -119,7 +124,7 @@ class FileSyncer:
 
     def extract_productivity_cost_data(self) -> None:
         # get latest file list
-        logging.log(logging.INFO, f"Extracting productivity cost data from {self.host_url}")
+        logger.info(f"Extracting productivity cost data from {self.host_url}")
         with urlopen(f"{self.host_url}/pub/time.series/pr/") as response:
             body = response.read()
             soup = BeautifulSoup(body, 'html.parser')
@@ -139,19 +144,19 @@ class FileSyncer:
                 self._create_date_directory(file_date)
 
                 urllib.request.urlretrieve (f"{self.host_url}{link.get('href')}", f"/tmp/{file_date}/{file_name}")
-                logging.log(logging.INFO, f"Downloaded file: {file_date}/{file_name}")
+                logger.info(f"Downloaded file: {file_date}/{file_name}")
                 self.files_pending_upload.append((file_date, file_name))
 
 
     def load_productivity_cost_data(self) -> None:
         self._check_files_to_update()
 
-        logging.log(logging.INFO, f"Adding the following new files: {self.files_to_add}")
+        logger.info(f"Adding the following new files: {self.files_to_add}")
         for file_date, file_name in self.files_to_add:
             object_key = f"{self.prefix}/{file_date}/{file_name}"
             self.bucket.upload_file(f'/tmp/{file_date}/{file_name}', f"{object_key}")
 
-        logging.log(logging.INFO, f"Deleting the following files: {self.files_to_delete}")
+        logger.info(f"Deleting the following files: {self.files_to_delete}")
         for file_date, file_name in self.files_to_delete:
             object_key = f"{self.prefix}/{file_date}/{file_name}"
             self.s3_client.delete_objects(f's3://{self.s3_bucket}/{object_key}')
@@ -159,11 +164,11 @@ class FileSyncer:
 
     def clean_up_local_files(self) -> None:
         for file_date, file_name in self.files_pending_upload:
-            logging.log(logging.INFO, f"Cleaning up local file: {file_date}/{file_name}")
+            logger.info(f"Cleaning up local file: {file_date}/{file_name}")
             self._clean_up_local_file(f"{file_date}/{file_name}")
 
 
     def purge_local_directory(self) -> None:
         for date in os.listdir("/tmp"):
-            logging.log(logging.INFO, f"Removing local directory: {date}")
+            logger.info(f"Removing local directory: {date}")
             os.rmdir(f"/tmp/{date}")

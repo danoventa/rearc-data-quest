@@ -19,10 +19,9 @@ def lambda_handler(event, context):
     s3_bucket = os.getenv("REARCQUESTBUCKET_BUCKET_NAME")
 
     reporter = Reporter()
-    reporter.load_data(s3_bucket) \
-            .clean_data() \
-            .print_census_summary() \
-            .print_pr_summary() \
-            .print_report()
+    reporter.load_data(s3_bucket).clean_data()
+    reporter.print_census_summary() 
+    reporter.print_pr_summary() 
+    reporter.print_report()
     
     return "Reporting Completed"

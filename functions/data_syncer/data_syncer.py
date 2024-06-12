@@ -4,7 +4,12 @@ import logging
 from botocore.client import Config
 from urllib.request import urlopen
 import json
+from typing import Type
 
+logger = logging.getLogger()
+
+logger.setLevel("INFO")
+DataSyncerType = Type["DataSyncer"]
 
 class DataSyncer():
     def __init__(self, url: str, s3_bucket: str) -> None:
@@ -22,13 +27,15 @@ class DataSyncer():
         urllib.request.install_opener(opener)
 
 
-    def extract_census_data(self) -> 'DataSyncer':
-        logging.log(logging.INFO, f"Extracting data from {self.url}")
+    def extract_census_data(self) -> DataSyncerType:
+        logger.info( f"Extracting data from {self.url}")
         with urlopen(f"{self.url}") as response:
             self.census_data = json.loads(response.read())
+        logger.info("Data extracted successfully")
         return self
 
 
     def load_census_data_to_s3(self) -> None:
-        logging.log(logging.INFO, f"Uploading census data to S3 bucket {self.s3_bucket}")
+        logger.info(f"Uploading census data to S3 bucket {self.s3_bucket}")
         self.bucket.put_object(Key=f"{self.prefix}.json", Body=json.dumps(self.census_data))
+        logger.info("Data uploaded successfully")

@@ -26,7 +26,7 @@
 - [Part3Notebook.ipynb with analysis of data](/Part3Notebook.ipynb)
 
 ## Part 4: Infrastructure as Code (Incomplete)
-This section currently requires an S3 notification trigger to trigger the reporting lambda. 
+This section currently requires an S3 notification trigger to trigger the reporting lambda. Currnetly, the statemachine executes the reporting function once the FileSync (PR Data) and DataSync (census data)have finished executing successfully. 
 
 - [AWS SAM template file to generate CloudFormation Stack](/template.yaml)
 - [AW SAM StateMachine workflow for daily triggered pipeline](/statemachine/rearc_data_quest.asl.json)
