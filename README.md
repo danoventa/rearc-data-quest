@@ -2,12 +2,12 @@
 
 This project contains source code and supporting files for a serverless application that you can deploy with the SAM CLI. It includes the following files and folders:
 
-- functions - Code for the application's Lambda functions to check the value of, buy, or sell shares of a stock.
-- statemachines - Definition for the state machine that orchestrates the stock trading workflow.
+- functions - Code for the application's Lambda functions to sync data and files to s3, and analyze and report on the sync'd data. 
+- statemachines - Definition for the state machine that orchestrates the sync and reporting workflow. 
 - tests - Unit tests for the Lambda functions' application code.
 - template.yaml - A template that defines the application's AWS resources.
 
-The application uses several AWS resources, including Step Functions state machines, Lambda functions and an EventBridge rule trigger. These resources are defined in the `template.yaml` file in this project. You can update the template to add AWS resources through the same deployment process that updates your application code.
+The application uses several AWS resources, including Step Functions state machines, Lambda functions and an EventBridge rule trigger. These resources are defined in the `template.yaml` file in this project. You can update the template to add AWS resources through the same deployment process that updates your application code. Permissions to each of the resources are managed through the `template.yaml` file under policies of their respective resources. 
 
 ## Deploy the application
 
@@ -46,14 +46,13 @@ To simplify troubleshooting, SAM CLI has a command called `sam logs`. `sam logs`
 `NOTE`: This command works for all AWS Lambda functions; not just the ones you deploy using SAM.
 
 ```bash
-dan-rearc-dataquest$ sam logs -n StockCheckerFunction --stack-name "dan-rearc-dataquest" --tail
+dan-rearc-dataquest$ sam logs -n FileSyncerFunction --stack-name "dan-rearc-dataquest" --tail
 ```
 
 You can find more information and examples about filtering Lambda function logs in the [SAM CLI Documentation](https://docs.aws.amazon.com/serverless-application-model/latest/developerguide/serverless-sam-cli-logging.html).
 
 ## Tests
-
-Tests are defined in the `tests` folder in this project. We'll be using poetry to manage our virtual environments, and run tests.
+Tests are defined in the `tests` folder in this project. We'll be using poetry to manage our virtual environments, and run tests, which is a departure from the original SAM template. 
 
 ```bash
 dan-rearc-dataquest$ cat tests/requirements.txt | xargs poetry add
